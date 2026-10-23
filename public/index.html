@@ -122,14 +122,14 @@
     <label class="lbl" for="targets">Targets — one URL, hostname, or domain per line</label>
     <textarea id="targets" placeholder="example.org&#10;https://app.example.org&#10;10.0.0.5:8080"></textarea>
     <div class="controls">
-      <label class="chk enum"><input type="checkbox" id="enumerate"> 🔍 Enumerate subdomains (CT logs)</label>
+      <label class="chk enum"><input type="checkbox" id="enumerate"> Enumerate subdomains (CT logs)</label>
       <label class="chk"><input type="checkbox" id="local"> Check local PHP</label>
       <label class="chk"><input type="checkbox" id="insecure"> Skip TLS verify</label>
       <span class="spin-num">timeout <input type="number" id="timeout" value="10" min="1" max="60"> s</span>
       <button class="run" id="run">Run audit</button>
     </div>
     <div class="hint">Passive only: reads the advertised PHP version from <code>Server</code> / <code>X-Powered-By</code> and detects PHP presence (<code>PHPSESSID</code>, WordPress). Version checks are advisory — confirm with a local <code>php -v</code>. With enumeration on, each line is treated as a <b>domain</b> and its subdomains are discovered from Certificate Transparency logs.</div>
-    <div class="auth">⚠ Run only against infrastructure you own or are authorized to assess.</div>
+    <div class="auth">Run only against infrastructure you own or are authorized to assess.</div>
     <div class="loader" id="loader"><span class="dots"></span> <span id="loadtext">checking…</span></div>
     <div id="error"></div>
   </section>

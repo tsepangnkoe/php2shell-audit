@@ -32,7 +32,7 @@ function renderEnumerations(enums) {
   if (!enums || !enums.length) { $('enumbar').innerHTML = ''; return }
   $('enumbar').innerHTML = enums.map((e) => {
     const src = Object.entries(e.sources || {}).map(([k, v]) => `${esc(k)}: ${esc(v)}`).join(' · ')
-    return `<div class="enumbar">🔍 <b>${esc(e.domain)}</b> — discovered <b>${e.discovered}</b> names, <b>${e.live}</b> resolve in DNS and were checked. <span style="color:var(--faint)">(${src})</span></div>`
+    return `<div class="enumbar"><b>${esc(e.domain)}</b> — discovered <b>${e.discovered}</b> names, <b>${e.live}</b> resolve in DNS and were checked. <span style="color:var(--faint)">(${src})</span></div>`
   }).join('')
 }
 

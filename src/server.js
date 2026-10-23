@@ -111,7 +111,7 @@ function serve({ host = '127.0.0.1', port = 7627 } = {}) {
     server.listen(port, host, () => {
       const addr = server.address()
       if (host !== '127.0.0.1' && host !== 'localhost') {
-        process.stderr.write('\n  ⚠  WARNING: bound to a non-local interface. This exposes an\n'
+        process.stderr.write('\n  WARNING: bound to a non-local interface. This exposes an\n'
           + '     arbitrary-URL fetcher to the network (SSRF / open-proxy risk).\n'
           + '     Only do this on a trusted, access-controlled network.\n')
       }
