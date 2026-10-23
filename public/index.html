@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PHP2Shell Audit · LsCom CSIRT</title>
+<style>
+  :root{
+    --bg:#070b12; --bg2:#0c121d; --panel:#111a28; --panel2:#152133;
+    --border:#223349; --border2:#2d415d;
+    --ink:#eaf1fb; --muted:#8aa0bd; --faint:#5f7694;
+    --accent:#6ea8ff; --accent2:#8c7bff; --glow:rgba(110,168,255,.35);
+    --vuln:#ff5d6c; --vuln-bg:rgba(255,93,108,.12); --vuln-bd:rgba(255,93,108,.45);
+    --ok:#3ddc97; --ok-bg:rgba(61,220,151,.12); --ok-bd:rgba(61,220,151,.4);
+    --unk:#ffc14d; --unk-bg:rgba(255,193,77,.12); --unk-bd:rgba(255,193,77,.4);
+    --radius:16px; --shadow:0 20px 60px rgba(0,0,0,.45);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    min-height:100vh;color:var(--ink);
+    background:
+      radial-gradient(1200px 700px at 15% -10%,rgba(140,123,255,.18),transparent 60%),
+      radial-gradient(1000px 600px at 110% 10%,rgba(110,168,255,.16),transparent 55%),
+      linear-gradient(180deg,var(--bg),var(--bg2));
+    background-attachment:fixed;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:960px;margin:0 auto;padding:40px 16px 80px}
+  header.hero{display:flex;align-items:center;gap:16px;margin-bottom:8px}
+  .mark{width:52px;height:52px;flex:0 0 auto;filter:drop-shadow(0 6px 18px var(--glow))}
+  h1{font-size:28px;line-height:1.1;margin:0;font-weight:800;letter-spacing:-.02em}
+  h1 .grad{background:linear-gradient(90deg,var(--accent),var(--accent2));-webkit-background-clip:text;background-clip:text;color:transparent}
+  .sub{color:var(--muted);font-size:13.5px;margin-top:4px}
+  .sub b{color:var(--ink);font-weight:600}
+  .panel{
+    background:linear-gradient(180deg,var(--panel),var(--panel2));
+    border:1px solid var(--border);border-radius:var(--radius);
+    box-shadow:var(--shadow);padding:22px;margin-top:22px;
+  }
+  label.lbl{display:block;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--faint);margin:0 0 8px}
+  textarea#targets{
+    width:100%;min-height:118px;resize:vertical;color:var(--ink);
+    background:#0a111c;border:1px solid var(--border);border-radius:12px;
+    padding:14px 16px;font-size:15px;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+    outline:none;transition:border-color .15s,box-shadow .15s;
+  }
+  textarea#targets:focus{border-color:var(--accent);box-shadow:0 0 0 4px var(--glow)}
+  .controls{display:flex;flex-wrap:wrap;align-items:center;gap:18px 22px;margin-top:16px}
+  .chk{display:flex;align-items:center;gap:9px;color:var(--muted);font-size:14px;cursor:pointer;user-select:none}
+  .chk input{width:17px;height:17px;accent-color:var(--accent);cursor:pointer}
+  .spin-num{display:flex;align-items:center;gap:8px;color:var(--muted);font-size:14px}
+  .spin-num input{width:64px;background:#0a111c;border:1px solid var(--border);border-radius:9px;color:var(--ink);padding:7px 9px;font-size:14px;outline:none}
+  .run{margin-left:auto}
+  button.run{
+    border:0;cursor:pointer;color:#071020;font-weight:700;font-size:15px;letter-spacing:.01em;
+    padding:13px 26px;border-radius:12px;
+    background:linear-gradient(90deg,var(--accent),var(--accent2));
+    box-shadow:0 10px 30px var(--glow);transition:transform .12s,box-shadow .12s,filter .12s;
+  }
+  button.run:hover{transform:translateY(-1px);filter:brightness(1.06)}
+  button.run:active{transform:translateY(0)}
+  button.run:disabled{filter:grayscale(.5) brightness(.8);cursor:progress;box-shadow:none}
+  .hint{color:var(--faint);font-size:12.5px;margin-top:12px}
+  .hint code{background:#0a111c;border:1px solid var(--border);border-radius:6px;padding:1px 6px;color:var(--muted)}
+
+  /* summary tiles */
+  .summary{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:22px}
+  .tile{border:1px solid var(--border);border-radius:14px;padding:16px 18px;background:#0b1320;position:relative;overflow:hidden}
+  .tile .n{font-size:34px;font-weight:800;line-height:1;letter-spacing:-.02em}
+  .tile .t{font-size:12px;letter-spacing:.09em;text-transform:uppercase;color:var(--faint);margin-top:8px}
+  .tile.v{border-color:var(--vuln-bd)} .tile.v .n{color:var(--vuln)}
+  .tile.o{border-color:var(--ok-bd)} .tile.o .n{color:var(--ok)}
+  .tile.u{border-color:var(--unk-bd)} .tile.u .n{color:var(--unk)}
+  .tile::after{content:"";position:absolute;inset:auto -30% -60% auto;width:140px;height:140px;border-radius:50%;opacity:.14;background:currentColor}
+
+  /* result cards */
+  #results{margin-top:8px}
+  .card{
+    display:flex;gap:14px;align-items:flex-start;
+    border:1px solid var(--border);border-left-width:4px;border-radius:12px;
+    padding:15px 17px;margin-top:12px;background:#0b1320;
+    animation:rise .32s cubic-bezier(.2,.8,.2,1) both;
+  }
+  @keyframes rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+  .card.v{border-left-color:var(--vuln);background:linear-gradient(90deg,var(--vuln-bg),transparent 40%)}
+  .card.o{border-left-color:var(--ok);background:linear-gradient(90deg,var(--ok-bg),transparent 40%)}
+  .card.u{border-left-color:var(--unk);background:linear-gradient(90deg,var(--unk-bg),transparent 40%)}
+  .badge{flex:0 0 auto;font-size:11px;font-weight:700;letter-spacing:.07em;padding:5px 10px;border-radius:999px;margin-top:2px}
+  .badge.v{color:var(--vuln);background:var(--vuln-bg);border:1px solid var(--vuln-bd)}
+  .badge.o{color:var(--ok);background:var(--ok-bg);border:1px solid var(--ok-bd)}
+  .badge.u{color:var(--unk);background:var(--unk-bg);border:1px solid var(--unk-bd)}
+  .card .body{min-width:0;flex:1}
+  .card .tgt{font-weight:650;font-size:15px;word-break:break-all;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+  .card .meta{font-size:12.5px;color:var(--faint);margin-top:2px}
+  .card .meta .ver{color:var(--accent);font-weight:600}
+  .card .why{font-size:13px;color:var(--muted);margin-top:7px;line-height:1.5}
+
+  .empty{color:var(--faint);text-align:center;padding:34px 10px;font-size:14px}
+  .err{color:var(--vuln);background:var(--vuln-bg);border:1px solid var(--vuln-bd);border-radius:12px;padding:12px 15px;margin-top:16px;font-size:14px}
+
+  /* loader */
+  .loader{display:none;align-items:center;gap:12px;color:var(--muted);font-size:14px;margin-top:18px}
+  .loader.on{display:flex}
+  .dots{width:18px;height:18px;border:2.5px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+
+  footer{margin-top:34px;color:var(--faint);font-size:12.5px;line-height:1.7;text-align:center}
+  footer .vers{display:inline-flex;flex-wrap:wrap;gap:6px;justify-content:center;margin-top:8px}
+  footer .pill{background:#0a111c;border:1px solid var(--border);border-radius:999px;padding:3px 11px;color:var(--muted)}
+  @media(max-width:620px){.summary{grid-template-columns:1fr}.run{margin-left:0;width:100%}button.run{width:100%}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="hero">
+    <svg class="mark" viewBox="0 0 48 48" fill="none" aria-hidden="true">
+      <defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stop-color="#6ea8ff"/><stop offset="1" stop-color="#8c7bff"/>
+      </linearGradient></defs>
+      <path d="M24 3l17 6v11c0 11-7.3 19.4-17 22-9.7-2.6-17-11-17-22V9l17-6z" fill="url(#g)" opacity=".18"/>
+      <path d="M24 3l17 6v11c0 11-7.3 19.4-17 22-9.7-2.6-17-11-17-22V9l17-6z" stroke="url(#g)" stroke-width="2"/>
+      <path d="M16 24l6 6 12-13" stroke="url(#g)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    <div>
+      <h1>PHP2Shell <span class="grad">Audit</span></h1>
+      <div class="sub"><b>LsCom CSIRT</b> · passive exposure check for CVE-2026-109618 / CVE-2026-109619 · <b>no exploit probes</b></div>
+    </div>
+  </header>
+
+  <section class="panel">
+    <label class="lbl" for="targets">Targets — one URL or hostname per line</label>
+    <textarea id="targets" placeholder="https://app.example.org&#10;intranet.example.org&#10;10.0.0.5:8080"></textarea>
+    <div class="controls">
+      <label class="chk"><input type="checkbox" id="local"> Also check this server's local PHP</label>
+      <label class="chk"><input type="checkbox" id="insecure"> Skip TLS verify</label>
+      <span class="spin-num">timeout <input type="number" id="timeout" value="10" min="1" max="60"> s</span>
+      <button class="run" id="run">Run audit</button>
+    </div>
+    <div class="hint">Passive only: reads advertised PHP version from <code>Server</code> / <code>X-Powered-By</code> headers. Header checks are advisory — confirm with a local <code>php -v</code>.</div>
+    <div class="loader" id="loader"><span class="dots"></span> checking…</div>
+    <div id="error"></div>
+  </section>
+
+  <div class="summary" id="summary" hidden>
+    <div class="tile v"><div class="n" id="c-v">0</div><div class="t">Vulnerable</div></div>
+    <div class="tile o"><div class="n" id="c-o">0</div><div class="t">OK (advisory)</div></div>
+    <div class="tile u"><div class="n" id="c-u">0</div><div class="t">Unknown</div></div>
+  </div>
+
+  <section id="results"><div class="empty" id="placeholder">Results will appear here.</div></section>
+
+  <footer>
+    Fixed releases — update to these or newer:
+    <div class="vers">
+      <span class="pill">8.2.35</span><span class="pill">8.3.36</span>
+      <span class="pill">8.4.27</span><span class="pill">8.5.12</span>
+      <span class="pill">≤ 8.1 = EOL · always exposed</span>
+    </div>
+    <div style="margin-top:12px">php2shell-audit <span id="ver"></span> · self-hosted · runs only against hosts you authorize</div>
+  </footer>
+</div>
+<script src="app.js"></script>
+</body>
+</html>

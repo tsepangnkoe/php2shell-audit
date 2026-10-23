@@ -1,6 +1,6 @@
 {
   "name": "php2shell-audit",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Safe, passive PHP2Shell (CVE-2026-109618 / CVE-2026-109619) exposure checker. Checks local PHP binaries and advertised HTTP versions — no crash probes, no subdomain enumeration.",
   "keywords": [
     "php2shell",
@@ -22,12 +22,14 @@
   "files": [
     "bin/",
     "src/",
+    "public/",
     "README.md",
     "LICENSE"
   ],
   "scripts": {
     "test": "node --test",
-    "start": "node bin/php2shell-audit.js"
+    "start": "node bin/php2shell-audit.js",
+    "serve": "node bin/php2shell-audit.js serve"
   },
   "engines": {
     "node": ">=18"

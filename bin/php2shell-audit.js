@@ -15,6 +15,7 @@ USAGE
   php2shell-audit --local
   php2shell-audit https://app.example.com api.example.com
   php2shell-audit -l hosts.txt -o report.json
+  php2shell-audit serve [--port 7627] [--host 127.0.0.1]   # launch the web UI
 
 INPUT (at least one)
   [targets...]        URLs or hostnames to check passively over HTTP
@@ -52,7 +53,21 @@ function colorize(verdict, s, enabled) {
   return `${COLORS[verdict] || ''}${s}\x1b[0m`
 }
 
+async function serveCmd(argv) {
+  const { values } = parseArgs({
+    args: argv,
+    options: {
+      port: { type: 'string', default: '7627' },
+      host: { type: 'string', default: '127.0.0.1' },
+    },
+  })
+  const { serve } = require('../src/server')
+  await serve({ host: values.host, port: Number(values.port) || 7627 })
+  return new Promise(() => {}) // run until Ctrl+C
+}
+
 async function main(argv) {
+  if (argv[0] === 'serve') return serveCmd(argv.slice(1))
   let parsed
   try {
     parsed = parseArgs({

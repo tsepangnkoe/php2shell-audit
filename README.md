@@ -53,7 +53,25 @@ npm link            # optional: puts `php2shell-audit` on your PATH
 node bin/php2shell-audit.js --help
 ```
 
-## Usage
+## Web UI
+
+Prefer a point-and-click check? Launch the built-in interface:
+
+```bash
+php2shell-audit serve                 # http://127.0.0.1:7627
+php2shell-audit serve --port 8080     # custom port
+```
+
+Open the URL, paste one or more hosts (one per line), and get live
+color-coded verdict cards plus a summary. It runs the **same passive engine**
+as the CLI — no exploit probes.
+
+> **Security:** the server binds to `127.0.0.1` by default on purpose. It fetches
+> whatever URL you give it, so exposing it on a public interface (`--host 0.0.0.0`)
+> turns it into an SSRF / open-proxy risk. Only bind to a wider interface on a
+> trusted, access-controlled network — the tool prints a warning when you do.
+
+## Usage (CLI)
 
 ```bash
 # this machine (authoritative — reads the real `php -v` build)
