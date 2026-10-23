@@ -1,0 +1,5 @@
+# One URL or hostname per line (# comments ignored, blank lines skipped).
+# Bare hostnames are checked over https://. Hosts you are authorized to test ONLY.
+# https://app.example.org
+# intranet.example.org
+# 10.0.0.5:8080
