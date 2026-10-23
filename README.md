@@ -91,7 +91,7 @@ as the CLI — no exploit probes.
 
 ```bash
 # enumerate a domain's subdomains (CT logs) and check them all
-php2shell-audit -d gov.ls -o report.json --all-results
+php2shell-audit -d example.org -o report.json --all-results
 
 # this machine (authoritative — reads the real `php -v` build)
 php2shell-audit --local

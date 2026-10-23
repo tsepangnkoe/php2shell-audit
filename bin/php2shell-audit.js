@@ -13,7 +13,7 @@ const USAGE = `php2shell-audit ${PKG_VERSION} — passive PHP2Shell (CVE-2026-10
 USAGE
   php2shell-audit [targets...] [options]
   php2shell-audit --local
-  php2shell-audit -d gov.ls                 # enumerate subdomains + check
+  php2shell-audit -d example.org            # enumerate subdomains + check
   php2shell-audit https://app.example.com api.example.com
   php2shell-audit -l hosts.txt -o report.json
   php2shell-audit serve [--port 7627] [--host 127.0.0.1]   # launch the web UI
