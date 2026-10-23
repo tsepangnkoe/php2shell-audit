@@ -45,7 +45,7 @@ dependencies).
 
 ```bash
 # clone and link
-git clone https://github.com/lscom-csirt/php2shell-audit
+git clone https://github.com/tsepangnkoe/php2shell-audit
 cd php2shell-audit
 npm link            # optional: puts `php2shell-audit` on your PATH
 

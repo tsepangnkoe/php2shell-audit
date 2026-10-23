@@ -34,10 +34,10 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/lscom-csirt/php2shell-audit.git"
+    "url": "git+https://github.com/tsepangnkoe/php2shell-audit.git"
   },
   "bugs": {
-    "url": "https://github.com/lscom-csirt/php2shell-audit/issues"
+    "url": "https://github.com/tsepangnkoe/php2shell-audit/issues"
   },
-  "homepage": "https://github.com/lscom-csirt/php2shell-audit#readme"
+  "homepage": "https://github.com/tsepangnkoe/php2shell-audit#readme"
 }
