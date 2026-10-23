@@ -17,6 +17,7 @@ const MAX_TARGETS = 200
 function send(res, code, body, type = 'application/json') {
   res.writeHead(code, {
     'Content-Type': type,
+    'Cache-Control': 'no-store',
     'X-Content-Type-Options': 'nosniff',
     'Referrer-Policy': 'no-referrer',
     'Content-Security-Policy': "default-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:",
