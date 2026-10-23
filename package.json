@@ -13,6 +13,7 @@
     "defensive-security"
   ],
   "license": "Apache-2.0",
+  "author": "LsCom CSIRT",
   "type": "commonjs",
   "bin": {
     "php2shell-audit": "bin/php2shell-audit.js"
@@ -33,10 +34,10 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/YOUR-ORG/php2shell-audit.git"
+    "url": "git+https://github.com/lscom-csirt/php2shell-audit.git"
   },
   "bugs": {
-    "url": "https://github.com/YOUR-ORG/php2shell-audit/issues"
+    "url": "https://github.com/lscom-csirt/php2shell-audit/issues"
   },
-  "homepage": "https://github.com/YOUR-ORG/php2shell-audit#readme"
+  "homepage": "https://github.com/lscom-csirt/php2shell-audit#readme"
 }

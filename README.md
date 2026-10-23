@@ -4,8 +4,9 @@ Safe, **passive** exposure checker for the **PHP2Shell** vulnerabilities
 **CVE-2026-109618** and **CVE-2026-109619** — critical (CVSS 9.2) pre-auth RCE
 in PHP core, patched 2026-10-21.
 
-Built for defenders to check **their own infrastructure**. Zero dependencies,
-pure Node.js. Inspired by [`openai/php2shell-checker`](https://github.com/openai/php2shell-checker),
+Built by **LsCom CSIRT** for defenders to check **their own infrastructure**.
+Zero dependencies, pure Node.js. Inspired by
+[`openai/php2shell-checker`](https://github.com/openai/php2shell-checker),
 extended into a multi-target CLI with local-binary inspection, concurrency, and
 machine-readable reporting.
 
@@ -44,7 +45,7 @@ dependencies).
 
 ```bash
 # clone and link
-git clone https://github.com/YOUR-ORG/php2shell-audit
+git clone https://github.com/lscom-csirt/php2shell-audit
 cd php2shell-audit
 npm link            # optional: puts `php2shell-audit` on your PATH
 
@@ -141,5 +142,5 @@ authorized to test. The tool has no host-discovery feature by design.
 
 ## License
 
-[Apache-2.0](LICENSE). Based on prior art from `openai/php2shell-checker`
-(also Apache-2.0).
+[Apache-2.0](LICENSE) — Copyright © 2026 LsCom CSIRT. Based on prior art from
+`openai/php2shell-checker` (also Apache-2.0).
