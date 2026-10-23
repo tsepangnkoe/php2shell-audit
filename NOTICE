@@ -1,7 +1,7 @@
 php2shell-audit
-Copyright 2026 LsCom CSIRT
+Copyright 2026 Ls ComCSIRT
 
-This product includes software developed by LsCom CSIRT.
+This product includes software developed by Ls ComCSIRT.
 
 Inspired by and partially derived from openai/php2shell-checker
 (https://github.com/openai/php2shell-checker), licensed under Apache-2.0.

@@ -4,7 +4,7 @@ Safe, **passive** exposure checker for the **PHP2Shell** vulnerabilities
 **CVE-2026-109618** and **CVE-2026-109619** — critical (CVSS 9.2) pre-auth RCE
 in PHP core, patched 2026-10-21.
 
-Built by **LsCom CSIRT** for defenders to check **their own infrastructure**.
+Built by **Ls ComCSIRT** for defenders to check **their own infrastructure**.
 Zero dependencies, pure Node.js. Inspired by
 [`openai/php2shell-checker`](https://github.com/openai/php2shell-checker),
 extended into a multi-target CLI with local-binary inspection, concurrency, and
@@ -26,17 +26,33 @@ fixed releases: 8.2.35  8.3.36  8.4.27  8.5.12   (branches <= 8.1 EOL)
 ============================================================
 ```
 
-## Why this tool is safe to run anywhere
+## Why this tool is safe to run against production
 
 It is **version-based and passive**. It will **never**:
 
-- send the PHP2Shell crash / out-of-memory payload (no "active" mode exists),
-- enumerate third-party subdomains or discover hosts,
-- follow redirects, or read/parse response bodies.
+- send the PHP2Shell crash / out-of-memory payload (no "active" exploit mode exists),
+- send any request meant to fault, exhaust memory, or disrupt a service,
+- read or parse response bodies (detection uses response headers only).
 
-Those are the exact behaviours that made the proof-of-concept scanners
-circulating in the wild dangerous to the targets. This tool deliberately omits
-them so you can run it against production without risking an outage.
+That crash payload is the exact behaviour that made the PoC scanners in the wild
+dangerous to targets — this tool omits it entirely, so you can run it against
+production without risking an outage.
+
+It **does** help you map attack surface for authorized assessment: optional
+subdomain enumeration from **public Certificate Transparency logs** (crt.sh),
+DNS resolution, and normal header requests (redirects followed). Enumeration
+reads public data and does not probe the target. Run only against scope you own
+or are authorized to assess.
+
+## Detection signals
+
+For each host it reads response headers and reports:
+
+- **advertised version** from `Server` / `X-Powered-By` → `VULNERABLE` / `OK`;
+- **PHP presence** even when the version is hidden — `PHPSESSID` cookie,
+  WordPress (`wp-json`, plugin cookies), `X-Pingback` — reported as
+  `UNKNOWN · PHP detected, version hidden → confirm locally`;
+- nothing PHP-related → `UNKNOWN` (host may still run PHP behind a proxy).
 
 ## Install
 
@@ -74,6 +90,9 @@ as the CLI — no exploit probes.
 ## Usage (CLI)
 
 ```bash
+# enumerate a domain's subdomains (CT logs) and check them all
+php2shell-audit -d gov.ls -o report.json --all-results
+
 # this machine (authoritative — reads the real `php -v` build)
 php2shell-audit --local
 
@@ -156,9 +175,10 @@ node --test          # run the unit + integration test suite
 ## Scope & authorization
 
 You are responsible for running this only against infrastructure you own or are
-authorized to test. The tool has no host-discovery feature by design.
+authorized to test or assess. Subdomain enumeration reads only public
+Certificate Transparency data; the checks themselves are passive header reads.
 
 ## License
 
-[Apache-2.0](LICENSE) — Copyright © 2026 LsCom CSIRT. Based on prior art from
+[Apache-2.0](LICENSE) — Copyright © 2026 Ls ComCSIRT. Based on prior art from
 `openai/php2shell-checker` (also Apache-2.0).

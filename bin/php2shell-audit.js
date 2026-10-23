@@ -6,24 +6,26 @@
 const fs = require('node:fs')
 const { parseArgs } = require('node:util')
 const { VERDICT, EXIT_CODE, FIXED_IN } = require('../src/version')
-const { PKG_VERSION, checkLocal, checkRemote, pMap } = require('../src/index')
+const { PKG_VERSION, checkLocal, checkRemote, checkDomain, pMap } = require('../src/index')
 
 const USAGE = `php2shell-audit ${PKG_VERSION} — passive PHP2Shell (CVE-2026-109618 / CVE-2026-109619) checker
 
 USAGE
   php2shell-audit [targets...] [options]
   php2shell-audit --local
+  php2shell-audit -d gov.ls                 # enumerate subdomains + check
   php2shell-audit https://app.example.com api.example.com
   php2shell-audit -l hosts.txt -o report.json
   php2shell-audit serve [--port 7627] [--host 127.0.0.1]   # launch the web UI
 
 INPUT (at least one)
   [targets...]        URLs or hostnames to check passively over HTTP
+  -d, --domain DOMAIN enumerate subdomains (crt.sh CT logs) then check; repeatable
   -l, --list FILE     file of URLs/hostnames, one per line (# comments ok)
   --local             inspect PHP binaries on THIS machine (authoritative)
 
 OPTIONS
-  -c, --concurrency N network concurrency (default 10)
+  -c, --concurrency N network concurrency (default 15)
       --timeout N     per-request timeout in seconds (default 10)
   -k, --insecure      disable TLS certificate verification
   -H, --header K:V    extra request header (repeatable)
@@ -34,9 +36,9 @@ OPTIONS
   -h, --help          show this help
   -v, --version       show version
 
-This tool is version-based and passive. It never sends the PHP2Shell crash/DoS
-payload, never enumerates third-party subdomains, and never follows redirects
-or reads response bodies. Scope it to hosts you are authorized to test.
+Passive only: never sends the PHP2Shell crash/DoS payload and never reads
+response bodies. Subdomain enumeration uses public Certificate Transparency
+logs. Scope it to infrastructure you are authorized to assess.
 
 Fixed releases: 8.2.35  8.3.36  8.4.27  8.5.12   (branches <= 8.1 are EOL — always exposed)`
 
@@ -75,8 +77,9 @@ async function main(argv) {
       allowPositionals: true,
       options: {
         local: { type: 'boolean', default: false },
+        domain: { type: 'string', short: 'd', multiple: true, default: [] },
         list: { type: 'string', short: 'l' },
-        concurrency: { type: 'string', short: 'c', default: '10' },
+        concurrency: { type: 'string', short: 'c', default: '15' },
         timeout: { type: 'string', default: '10' },
         insecure: { type: 'boolean', short: 'k', default: false },
         header: { type: 'string', short: 'H', multiple: true, default: [] },
@@ -102,12 +105,13 @@ async function main(argv) {
     try { targets.push(...readLines(o.list)) }
     catch (err) { process.stderr.write(`cannot read --list: ${err.message}\n`); return EXIT_CODE.USAGE }
   }
-  if (!o.local && targets.length === 0) {
-    process.stderr.write(`Nothing to check. Provide targets, --list FILE, or --local.\n\n${USAGE}\n`)
+  const domains = o.domain || []
+  if (!o.local && targets.length === 0 && domains.length === 0) {
+    process.stderr.write(`Nothing to check. Provide targets, -d DOMAIN, --list FILE, or --local.\n\n${USAGE}\n`)
     return EXIT_CODE.USAGE
   }
 
-  const concurrency = Math.max(1, Number(o.concurrency) || 10)
+  const concurrency = Math.max(1, Number(o.concurrency) || 15)
   const timeout = Number(o.timeout)
   if (!(timeout > 0 && timeout <= 120)) {
     process.stderr.write('--timeout must be > 0 and <= 120 seconds\n'); return EXIT_CODE.USAGE
@@ -121,12 +125,23 @@ async function main(argv) {
 
   const color = process.stdout.isTTY && !o['no-color'] && !process.env.NO_COLOR
   const results = []
+  const opts = { timeoutMs: timeout * 1000, concurrency, headers }
+  const quiet = o.json
 
   if (o.local) results.push(...await checkLocal())
-  if (targets.length) {
-    const opts = { timeoutMs: timeout * 1000, insecure: o.insecure, headers }
-    results.push(...await pMap(targets, concurrency, (t) => checkRemote(t, opts)))
+  for (const d of domains) {
+    if (!quiet) process.stderr.write(`[*] enumerating subdomains of ${d} (crt.sh) …\n`)
+    const { enumeration, results: r } = await checkDomain(d, opts, {
+      onProgress: (ev) => {
+        if (quiet) return
+        if (ev.phase === 'enumerated') process.stderr.write(`    discovered ${ev.count} unique names\n`)
+        if (ev.phase === 'resolved') process.stderr.write(`    ${ev.live} resolve in DNS — checking …\n`)
+      },
+    })
+    void enumeration
+    results.push(...r)
   }
+  if (targets.length) results.push(...await pMap(targets, concurrency, (t) => checkRemote(t, opts)))
 
   const counts = { VULNERABLE: 0, OK: 0, UNKNOWN: 0 }
   for (const r of results) counts[r.verdict] = (counts[r.verdict] || 0) + 1
@@ -137,7 +152,7 @@ async function main(argv) {
     process.stdout.write(`php2shell-audit ${PKG_VERSION}  —  CVE-2026-109618 / CVE-2026-109619  (passive, no probes)\n`)
     process.stdout.write(`fixed releases: ${Object.entries(FIXED_IN).map(([b, p]) => `${b}.${p}`).join('  ')}   (branches <= 8.1 EOL)\n\n`)
     for (const r of results) {
-      const ver = r.php_version ? ` PHP ${r.php_version}` : ''
+      const ver = r.php_version ? ` PHP ${r.php_version}` : (r.php_detected ? ' PHP (version hidden)' : '')
       process.stdout.write(`${colorize(r.verdict, `[${r.verdict}]`, color)} ${r.target}${ver}  (${r.mode})\n      ${r.reason}\n`)
     }
     process.stdout.write(`\n${'='.repeat(60)}\n`)

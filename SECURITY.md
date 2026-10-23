@@ -12,12 +12,20 @@ We aim to acknowledge within 3 business days.
 not and will not:
 
 - send the PHP2Shell crash / out-of-memory payload, or any exploit probe;
-- enumerate, discover, or resolve third-party hosts;
-- follow redirects or read response bodies.
+- send any request intended to cause a fault, exhaust memory, or disrupt a service;
+- read or parse response bodies (detection uses response headers only).
 
-Pull requests that add exploit probing, denial-of-service behaviour, or mass
-host discovery will not be accepted — those features would turn a defensive
-self-check into offensive tooling.
+It **does** support attack-surface mapping for authorized assessment:
+
+- optional subdomain enumeration from **public Certificate Transparency logs**
+  (crt.sh) and passive DNS — this reads public data and does not probe the target;
+- DNS resolution of discovered names, and normal `HEAD`/`GET` header requests
+  (redirects followed) to read advertised versions and PHP-presence signals.
+
+Pull requests that add exploit probing or denial-of-service behaviour will not
+be accepted — those would turn a defensive assessment tool into offensive
+tooling. Enumeration and header reads are standard, non-intrusive CSIRT
+attack-surface activities and must only be run against authorized scope.
 
 ## Using it responsibly
 
